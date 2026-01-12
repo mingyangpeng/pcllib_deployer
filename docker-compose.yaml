@@ -1,0 +1,28 @@
+services:
+  pcl_server:
+    container_name: pcl_deployer
+    build:
+      context: .
+    image: ros2_alg_base:v0.0.1
+    restart: always
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ./code:/root/code
+      - /etc/hosts:/etc/hosts
+      - /sys/class/net:/sys/class/net:ro
+      - /sys:/sys:ro
+    # command: sh -c "/root/code/script_run.sh && tail -f /dev/null"
+    command: sh -c "tail -f /dev/null"
+
+    environment:
+      - DISPLAY
+      - TZ=Asia/Shanghai
+      - CONTAINER_TIMEZONE=Asia/Shanghai
+      - NVIDIA_VISIBLE_DEVICES=all
+    tty: true
+    network_mode: "host"
+    ipc: host
+    devices:
+      - /dev/dri:/dev/dri
+    # runtime: nvidia
