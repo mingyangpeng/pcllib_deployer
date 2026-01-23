@@ -84,9 +84,23 @@ template void PCLUTILS::loadPointCloud<pcl::PointXYZRGB>(const std::string& file
 template void PCLUTILS::loadPointCloud<pcl::PointNormal>(const std::string& file_name, pcl::PointCloud<pcl::PointNormal>::Ptr& cloud, float scale);
 
 template<typename PointT>
-void savePointCloud(const std::string& file_name, const typename pcl::PointCloud<PointT>::Ptr& cloud){
+void PCLUTILS::savePointCloud(const std::string& file_name, const typename pcl::PointCloud<PointT>::Ptr& cloud){
     io::savePointCloud<PointT>(file_name, cloud);  // 调用util.hpp中的函数
 }
+template void PCLUTILS::savePointCloud<pcl::PointXYZ>(const std::string& file_name, const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud);
+template void PCLUTILS::savePointCloud<pcl::PointXYZI>(const std::string& file_name, const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud);
+template void PCLUTILS::savePointCloud<pcl::PointXYZRGB>(const std::string& file_name, const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud);
+template void PCLUTILS::savePointCloud<pcl::PointNormal>(const std::string& file_name, const pcl::PointCloud<pcl::PointNormal>::Ptr& cloud);
+
+template<typename PointT>
+void downSampleVoxelGridFilter(const typename pcl::PointCloud<PointT>::Ptr& cloud_in, typename pcl::PointCloud<PointT>::Ptr& cloud_out, float leaf_size, bool calc_center){
+    filter::voxelGridFilter<PointT>(cloud_in, cloud_out, leaf_size, calc_center);  // 调用filter.hpp中的函数
+}
+template void downSampleVoxelGridFilter<pcl::PointXYZ>(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_out, float leaf_size, bool calc_center);
+template void downSampleVoxelGridFilter<pcl::PointXYZI>(const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud_out, float leaf_size, bool calc_center);
+template void downSampleVoxelGridFilter<pcl::PointXYZRGB>(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud_out, float leaf_size, bool calc_center);
+template void downSampleVoxelGridFilter<pcl::PointNormal>(const pcl::PointCloud<pcl::PointNormal>::Ptr& cloud_in, pcl::PointCloud<pcl::PointNormal>::Ptr& cloud_out, float leaf_size, bool calc_center);
+
 
 
 

@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.8)
-project(pcl_utils)
+project(pcllibs)
+
+if(POLICY CMP0144)
+    cmake_policy(SET CMP0144 NEW)
+endif()
+
 
 add_definitions(-DPCL_NO_PRECOMPILE)
 add_definitions(-DBOOST_NO_CXX11_SMART_PTR)
@@ -30,28 +35,56 @@ find_package(PCL REQUIRED COMPONENTS
 find_package(OpenCV REQUIRED)
 
 # 收集src目录下所有源文件
-file(GLOB_RECURSE PCL_UTILS_SOURCES 
+file(GLOB_RECURSE PCLLIBS_SOURCES 
   "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
 )
 
 # 创建动态库
-add_library(pcl_utils SHARED ${PCL_UTILS_SOURCES})
+add_library(pcllibs SHARED ${PCLLIBS_SOURCES})
 
 # 链接依赖库
-target_link_libraries(pcl_utils PUBLIC 
+target_link_libraries(pcllibs PUBLIC 
   ${PCL_LIBRARIES}
   ${Boost_LIBRARIES}
   ${OpenCV_LIBS}
 )
 
 # 设置包含目录
-target_include_directories(pcl_utils PUBLIC 
+target_include_directories(pcllibs PUBLIC 
   include 
   ${PCL_INCLUDE_DIRS} 
   ${EIGEN3_INCLUDE_DIR} 
   ${OpenCV_INCLUDE_DIRS}
 )
-# add_definitions(-DVTK_SILENCE_DEPRECATION_WARNINGS)
-# 添加demo可执行文件
-add_executable(demo demo.cpp)
-target_link_libraries(demo pcl_utils)
+
+set_property(TARGET pcllibs PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+
+
+# # 安装库和头文件
+# install(TARGETS pcllibs
+#   LIBRARY DESTINATION lib
+#   ARCHIVE DESTINATION lib
+#   RUNTIME DESTINATION bin
+# )
+
+# install(DIRECTORY include/
+#   DESTINATION include
+# )
+# # 导出库信息
+# export(TARGETS pcllibs
+#   FILE "${CMAKE_CURRENT_BINARY_DIR}/pcllibsTargets.cmake"
+#   NAMESPACE pcl_utils::
+# )
+
+# install(EXPORT pcllibsTargets
+#   FILE pcllibsTargets.cmake
+#   NAMESPACE pcl_utils::
+#   DESTINATION lib/cmake/pcl_utils
+# )
+
+
+# # add_definitions(-DVTK_SILENCE_DEPRECATION_WARNINGS)
+# # 添加demo可执行文件
+# add_executable(demo demo.cpp)
+# target_link_libraries(demo pcl_utils)

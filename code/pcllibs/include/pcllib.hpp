@@ -4,6 +4,7 @@
 #include "util.hpp"
 #include "viewer.hpp"
 #include "io.hpp"
+#include "filter.hpp"
 
 
 
@@ -38,6 +39,12 @@ public:
     // 保存点云
     template<typename PointT>
     void savePointCloud(const std::string& file_name, const typename pcl::PointCloud<PointT>::Ptr& cloud);
+
+    // 降采样--体素网格滤波
+    template<typename PointT>
+    void downSampleVoxelGridFilter(const typename pcl::PointCloud<PointT>::Ptr& cloud_in, typename pcl::PointCloud<PointT>::Ptr& cloud_out, float leaf_size, bool calc_center);
+    
+
 };
 
 }
