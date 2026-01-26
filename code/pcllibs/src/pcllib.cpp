@@ -73,7 +73,6 @@ template void PCLUTILS::showPointCloud<pcl::PointNormal>(   const pcl::PointClou
                                                             const Eigen::Matrix4f&, 
                                                             const std::string&);
 
-
 template<typename PointT>
 void PCLUTILS::loadPointCloud(const std::string& file_name, typename pcl::PointCloud<PointT>::Ptr& cloud, float scale){
     io::loadPointCloud<PointT>(file_name, cloud, scale);  // 调用io.hpp中的函数
@@ -93,16 +92,63 @@ template void PCLUTILS::savePointCloud<pcl::PointXYZRGB>(const std::string& file
 template void PCLUTILS::savePointCloud<pcl::PointNormal>(const std::string& file_name, const pcl::PointCloud<pcl::PointNormal>::Ptr& cloud);
 
 template<typename PointT>
-void downSampleVoxelGridFilter(const typename pcl::PointCloud<PointT>::Ptr& cloud_in, typename pcl::PointCloud<PointT>::Ptr& cloud_out, float leaf_size, bool calc_center){
+void PCLUTILS::downSampleVoxelGridFilter(const typename pcl::PointCloud<PointT>::Ptr& cloud_in, typename pcl::PointCloud<PointT>::Ptr& cloud_out, float leaf_size, bool calc_center){
     filter::voxelGridFilter<PointT>(cloud_in, cloud_out, leaf_size, calc_center);  // 调用filter.hpp中的函数
 }
-template void downSampleVoxelGridFilter<pcl::PointXYZ>(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_out, float leaf_size, bool calc_center);
-template void downSampleVoxelGridFilter<pcl::PointXYZI>(const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud_out, float leaf_size, bool calc_center);
-template void downSampleVoxelGridFilter<pcl::PointXYZRGB>(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud_out, float leaf_size, bool calc_center);
-template void downSampleVoxelGridFilter<pcl::PointNormal>(const pcl::PointCloud<pcl::PointNormal>::Ptr& cloud_in, pcl::PointCloud<pcl::PointNormal>::Ptr& cloud_out, float leaf_size, bool calc_center);
+template void PCLUTILS::downSampleVoxelGridFilter<pcl::PointXYZ>(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_out, float leaf_size, bool calc_center);
+template void PCLUTILS::downSampleVoxelGridFilter<pcl::PointXYZI>(const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud_out, float leaf_size, bool calc_center);
+template void PCLUTILS::downSampleVoxelGridFilter<pcl::PointXYZRGB>(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud_out, float leaf_size, bool calc_center);
+template void PCLUTILS::downSampleVoxelGridFilter<pcl::PointNormal>(const pcl::PointCloud<pcl::PointNormal>::Ptr& cloud_in, pcl::PointCloud<pcl::PointNormal>::Ptr& cloud_out, float leaf_size, bool calc_center);
 
+// 降采样--均匀降采样
+template<typename PointT>
+void PCLUTILS::downSampleUniformFilter(const typename pcl::PointCloud<PointT>::Ptr& cloud_in, typename pcl::PointCloud<PointT>::Ptr& cloud_out, float radius){
+    filter::uniformSampleFilter<PointT>(cloud_in, cloud_out, radius);  // 调用filter.hpp中的函数
+}
+template void PCLUTILS::downSampleUniformFilter<pcl::PointXYZ>(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_out, float radius);
+template void PCLUTILS::downSampleUniformFilter<pcl::PointXYZI>(const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud_out, float radius);
+template void PCLUTILS::downSampleUniformFilter<pcl::PointXYZRGB>(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud_out, float radius);
+template void PCLUTILS::downSampleUniformFilter<pcl::PointNormal>(const pcl::PointCloud<pcl::PointNormal>::Ptr& cloud_in, pcl::PointCloud<pcl::PointNormal>::Ptr& cloud_out, float radius);
 
+// 降采样--随机采样一致性
+template<typename PointT>
+void PCLUTILS::downSampleRandomFilter(const typename pcl::PointCloud<PointT>::Ptr& cloud_in, typename pcl::PointCloud<PointT>::Ptr& cloud_out, float sampling_ratio){
+    filter::randomSampleFilter<PointT>(cloud_in, cloud_out, sampling_ratio);  // 调用filter.hpp中的函数
+}
+template void PCLUTILS::downSampleRandomFilter<pcl::PointXYZ>(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_out, float sampling_ratio);   
+template void PCLUTILS::downSampleRandomFilter<pcl::PointXYZI>(const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud_out, float sampling_ratio);
+template void PCLUTILS::downSampleRandomFilter<pcl::PointXYZRGB>(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud_out, float sampling_ratio);
+template void PCLUTILS::downSampleRandomFilter<pcl::PointNormal>(const pcl::PointCloud<pcl::PointNormal>::Ptr& cloud_in, pcl::PointCloud<pcl::PointNormal>::Ptr& cloud_out, float sampling_ratio);
 
+ // 滤波--Nan值点过滤
+ template<typename PointT>
+void PCLUTILS::filterNaN(const typename pcl::PointCloud<PointT>::Ptr& cloud_in, typename pcl::PointCloud<PointT>::Ptr& cloud_out){
+    filter::filterNaN<PointT>(cloud_in, cloud_out);  // 调用filter.hpp中的函数
+}
+template void PCLUTILS::filterNaN<pcl::PointXYZ>(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_out);
+template void PCLUTILS::filterNaN<pcl::PointXYZI>(const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud_out);
+template void PCLUTILS::filterNaN<pcl::PointXYZRGB>(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud_out);
+template void PCLUTILS::filterNaN<pcl::PointNormal>(const pcl::PointCloud<pcl::PointNormal>::Ptr& cloud_in, pcl::PointCloud<pcl::PointNormal>::Ptr& cloud_out);
+
+// 滤波-- 统计滤波
+template<typename PointT>
+void PCLUTILS::filterStatisticalOutlierRemoval(const typename pcl::PointCloud<PointT>::Ptr& cloud_in, typename pcl::PointCloud<PointT>::Ptr& cloud_out, int mean_k, float std_dev_mul_thresh, bool filter_nan){
+    filter::statisticalOutlierRemovalFilter<PointT>(cloud_in, cloud_out, mean_k, std_dev_mul_thresh, filter_nan);  // 调用filter.hpp中的函数
+}
+template void PCLUTILS::filterStatisticalOutlierRemoval<pcl::PointXYZ>(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_out, int mean_k, float std_dev_mul_thresh, bool filter_nan);
+template void PCLUTILS::filterStatisticalOutlierRemoval<pcl::PointXYZI>(const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud_out, int mean_k, float std_dev_mul_thresh, bool filter_nan);
+template void PCLUTILS::filterStatisticalOutlierRemoval<pcl::PointXYZRGB>(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud_out, int mean_k, float std_dev_mul_thresh, bool filter_nan);
+template void PCLUTILS::filterStatisticalOutlierRemoval<pcl::PointNormal>(const pcl::PointCloud<pcl::PointNormal>::Ptr& cloud_in, pcl::PointCloud<pcl::PointNormal>::Ptr& cloud_out, int mean_k, float std_dev_mul_thresh, bool filter_nan);
+
+// 滤波--半径滤波
+template<typename PointT>
+void PCLUTILS::filterRadiusOutlierRemoval(const typename pcl::PointCloud<PointT>::Ptr& cloud_in, typename pcl::PointCloud<PointT>::Ptr& cloud_out, float radius, int min_neighbors){
+    filter::radiusOutlierRemovalFilter<PointT>(cloud_in, cloud_out, radius, min_neighbors);  // 调用filter.hpp中的函数
+}
+template void PCLUTILS::filterRadiusOutlierRemoval<pcl::PointXYZ>(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_out, float radius, int min_neighbors);
+template void PCLUTILS::filterRadiusOutlierRemoval<pcl::PointXYZI>(const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud_out, float radius, int min_neighbors);
+template void PCLUTILS::filterRadiusOutlierRemoval<pcl::PointXYZRGB>(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud_in, pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud_out, float radius, int min_neighbors);
+template void PCLUTILS::filterRadiusOutlierRemoval<pcl::PointNormal>(const pcl::PointCloud<pcl::PointNormal>::Ptr& cloud_in, pcl::PointCloud<pcl::PointNormal>::Ptr& cloud_out, float radius, int min_neighbors);
 
 
 } // namespace pcllibs

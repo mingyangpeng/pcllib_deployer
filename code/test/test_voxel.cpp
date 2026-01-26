@@ -21,6 +21,18 @@ int main() {
         pcl_ptr->showPointCloud<pcl::PointXYZ>(cloud, cloud1);
         pcl_ptr->showPointCloud<pcl::PointXYZ>(cloud, cloud1, transform, transform1);
         pcl_ptr->savePointCloud<pcl::PointXYZ>( "/root/code/temp/stands_cloud_Module_C1.pcd",cloud);
+
+        pcl::PointCloud<pcl::PointXYZ>::Ptr pcd_down(new pcl::PointCloud<pcl::PointXYZ>);
+        // pcl_ptr->downSampleRandomFilter<pcl::PointXYZ>(cloud, pcd_down, 0.5);
+        // pcl_ptr->downSampleVoxelGridFilter<pcl::PointXYZ>(cloud, pcd_down, 0.05, true);
+        pcl_ptr->downSampleUniformFilter<pcl::PointXYZ>(cloud, pcd_down, 0.25);
+
+
+        std::cout<<cloud->size()<< ", "<<pcd_down->size()<<std::endl;
+        pcl_ptr->showPointCloud<pcl::PointXYZ>( pcd_down,  "pcd_down");
+        pcl::transformPointCloud<pcl::PointXYZ>(*pcd_down,*pcd_down, transform);
+        pcl_ptr->showPointCloud<pcl::PointXYZ>( cloud,pcd_down,  "donwsample");
+
     }
     
 }
