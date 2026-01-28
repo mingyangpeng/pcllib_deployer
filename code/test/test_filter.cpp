@@ -17,8 +17,17 @@ int main()
         pcl_ptr->filterNaN<pcl::PointXYZ>(cloud, cloud);
         // pcl_ptr->filterStatisticalOutlierRemoval<pcl::PointXYZ>(cloud, f_cloud, 50, 0.95, false);  
         // pcl_ptr->filterRadiusOutlierRemoval<pcl::PointXYZ>(cloud, f_cloud, 0.05,1);
+        pcl_ptr->showPointCloud<pcl::PointXYZ>(cloud, "cloud");
 
-        // pcl_ptr->filterC
+        auto cx = pcl_ptr->filterCondition<pcl::PointXYZ>("x",0,">=");
+        auto cy =pcl_ptr->filterCondition<pcl::PointXYZ>("y",0,">=");
+        auto cz =pcl_ptr->filterCondition<pcl::PointXYZ>("z",0,">=");
+        std::vector<pcl::FieldComparison<pcl::PointXYZ>::Ptr> conditions;
+        conditions.push_back(cx);
+        conditions.push_back(cy);
+        conditions.push_back(cz);
+        pcl_ptr->filterConditionRemovalFilter <pcl::PointXYZ>(cloud, f_cloud, conditions, "and", false);
+        
 
         pcl_ptr->showPointCloud<pcl::PointXYZ>(f_cloud, "f_cloud");
 
