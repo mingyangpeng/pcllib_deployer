@@ -3,18 +3,39 @@
 #define FILTER_HPP_
 
 #include <pcl/point_types.h>
+#include <pcl/filters/extract_indices.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/random_sample.h>
 #include <pcl/filters/uniform_sampling.h>
 #include <pcl/filters/filter.h>
 #include <pcl/filters/statistical_outlier_removal.h>
 #include <pcl/filters/radius_outlier_removal.h>
+#include <pcl/filters/conditional_removal.h>
+#include <pcl/filters/crop_box.h>
+#include <pcl/filters/passthrough.h>
+
 
 namespace pcllibs{
 
 namespace filter{
 
-
+/**
+ * @brief 点云索引
+ * @param cloud_in 输入点云
+ * @param cloud_out 输出点云
+ * @param indices 点云索引
+ * @param is_negative 是否为负索引
+ */
+template<typename PointT>
+void extractIndices(const typename pcl::PointCloud<PointT>::Ptr &cloud_in, 
+    typename pcl::PointCloud<PointT>::Ptr &cloud_out, 
+    pcl::PointIndices::Ptr &indices, bool is_negative){
+    pcl::ExtractIndices<PointT> extract_indices;
+    extract_indices.setInputCloud(cloud_in);
+    extract_indices.setIndices(indices);
+    extract_indices.setNegative(is_negative);
+    extract_indices.filter(*cloud_out);  
+}
 
 /**
  * @brief 体素网格滤波器
@@ -134,7 +155,155 @@ void radiusOutlierRemovalFilter(const typename pcl::PointCloud<PointT>::Ptr &clo
         // ror.setNegative(true); // 可选：反向滤波，仅保留孤立噪点（调试用）
         ror.filter(*cloud_out);
 }
-    
+
+
+/**
+ * @brief 条件设置 
+ * @param field_name 字段名 (如x,y,z,normal_x,normal_y,normal_z，curvature，intensity...)
+ * @param val 比较值
+ * @param comparison 比较操作符(>, >=, <, <=, =, !=)
+ * @note    pcl::ComparisonOps::GT	>	 
+            pcl::ComparisonOps::GE	>=
+            pcl::ComparisonOps::LT	<  
+            pcl::ComparisonOps::LE	<= 
+            pcl::ComparisonOps::EQ	=  
+*/
+template<typename PointT>
+typename pcl::FieldComparison<PointT>::Ptr removalCondition(const std::string &field_name, float val, const std::string &comparison){
+    pcl::ComparisonOps::CompareOp op;
+    if (comparison == ">") {
+        op = pcl::ComparisonOps::GT;
+    } else if (comparison == ">=") {
+        op = pcl::ComparisonOps::GE;
+    } else if (comparison == "<") {
+        op = pcl::ComparisonOps::LT;
+    } else if (comparison == "<=") {
+        op = pcl::ComparisonOps::LE;
+    } else if (comparison == "=") {
+        op = pcl::ComparisonOps::EQ; 
+    } else {
+        throw std::runtime_error("Invalid comparison operator");
+        exit(-1);
+    }
+    typename pcl::FieldComparison<PointT>::Ptr cond(new pcl::FieldComparison<PointT>(field_name, op, val));
+    return cond;
+}
+
+/**
+ * @brief 条件设置 
+ * @param field_name 字段名 (如x,y,z,normal_x,normal_y,normal_z，curvature，intensity...)
+ * @param val 比较值
+ * @param comparison 比较操作符(>, >=, <, <=, =, !=)
+ * @note    pcl::ComparisonOps::GT	>	 
+            pcl::ComparisonOps::GE	>=
+            pcl::ComparisonOps::LT	<  
+            pcl::ComparisonOps::LE	<= 
+            pcl::ComparisonOps::EQ	=  
+*/
+template<typename PointT>
+typename pcl::FieldComparison<PointT>::Ptr removalCondition(const std::string &field_name, int val, const std::string &comparison){
+    pcl::ComparisonOps::CompareOp op;
+    if (comparison == ">") {
+        op = pcl::ComparisonOps::GT;
+    } else if (comparison == ">=") {
+        op = pcl::ComparisonOps::GE;
+    } else if (comparison == "<") {
+        op = pcl::ComparisonOps::LT;
+    } else if (comparison == "<=") {
+        op = pcl::ComparisonOps::LE;
+    } else if (comparison == "=") {
+        op = pcl::ComparisonOps::EQ; 
+    } else {
+        throw std::runtime_error("Invalid comparison operator");
+        exit(-1);   
+    }
+    typename pcl::FieldComparison<PointT>::Ptr cond(new pcl::FieldComparison<PointT>(field_name, op, val));
+    return cond;
+}
+
+
+/**
+ * @brief 条件滤波,支持多条件组合
+ * @param cloud_in 输入点云
+ * @param cloud_out 输出点云
+ * @param cond_list 条件list
+ * @param cond_op 条件操作符 (AND, OR)
+ * @param is_negative 是否反向滤波
+ * 
+ */
+template<typename PointT>
+void conditionRemovalFilter(const typename pcl::PointCloud<PointT>::Ptr &cloud_in, typename pcl::PointCloud<PointT>::Ptr &cloud_out,
+                            const typename std::vector<typename pcl::FieldComparison<PointT>::Ptr> &cond_list, 
+                            const std::string &cond_op, bool is_negative){
+    typename pcl::ConditionBase<PointT>::Ptr conds; 
+    if(cond_op=="and"){
+        conds.reset(new pcl::ConditionAnd<PointT>());
+    }else{
+        conds.reset(new pcl::ConditionOr<PointT>());
+    }         
+    for(auto cond: cond_list){
+        conds->addComparison(cond);
+    } 
+
+    pcl::ConditionalRemoval<PointT> cond_rem(true);
+    cond_rem.setCondition(conds);
+    cond_rem.setInputCloud(cloud_in);
+    cond_rem.setKeepOrganized(true); 
+    cond_rem.filter(*cloud_out);
+
+    if(is_negative){
+        pcl::PointIndices::Ptr removed_indices(new pcl::PointIndices());
+        cond_rem.getRemovedIndices(*removed_indices);
+        cloud_out->clear();
+        extractIndices<PointT>(cloud_in, cloud_out, removed_indices, false);
+    }   
+}
+   
+/**
+ * @brief 裁剪盒滤波
+ * @param cloud_in 输入点云
+ * @param cloud_out 输出点云
+ * @param x_min x轴最小值
+ * @param x_max x轴最大值
+ * @param y_min y轴最小值
+ * @param y_max y轴最大值
+ * @param z_min z轴最小值
+ * @param z_max z轴最大值
+ * @param is_negative 是否反向滤波
+ */
+template<typename PointT>
+void cropBoxFilter(const typename pcl::PointCloud<PointT>::Ptr &cloud_in, typename pcl::PointCloud<PointT>::Ptr &cloud_out, float x_min, float x_max, float y_min, float y_max, float z_min, float z_max, bool is_negative=false){
+    pcl::CropBox<PointT> crop_filter;
+    crop_filter.setInputCloud(cloud_in);
+    crop_filter.setMin(Eigen::Vector4f(x_min, y_min, z_min, 1.0f));
+    crop_filter.setMax(Eigen::Vector4f(x_max, y_max, z_max, 1.0f));
+    crop_filter.setNegative(is_negative);
+    crop_filter.filter(*cloud_out);
+}
+
+/**
+ * @brief 直通滤波
+ * @param cloud_in 输入点云
+ * @param cloud_out 输出点云
+ * @param axis 滤波字段名
+ * @param val_min 最小值
+ * @param val_max 最大值
+ */
+template<typename PointT>
+void passThroughFilter(const typename pcl::PointCloud<PointT>::Ptr &cloud_in, typename pcl::PointCloud<PointT>::Ptr &cloud_out, const std::string &axis, float val_min, float val_max){
+    pcl::PassThrough<PointT> pass;
+    pass.setInputCloud(cloud_in);
+    pass.setFilterFieldName(axis);
+    pass.setFilterLimits(val_min, val_max);
+    pass.filter(*cloud_out);
+}
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////
 }// namespace filter
 }// namespace pcllibs
 #endif // FILTER_HPP_

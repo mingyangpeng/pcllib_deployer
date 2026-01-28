@@ -41,7 +41,7 @@ public:
     // 保存点云
     template<typename PointT>
     void savePointCloud(const std::string& file_name, const typename pcl::PointCloud<PointT>::Ptr& cloud);
-
+    
     // 降采样--体素网格滤波
     template<typename PointT>
     void downSampleVoxelGridFilter(const typename pcl::PointCloud<PointT>::Ptr& cloud_in, typename pcl::PointCloud<PointT>::Ptr& cloud_out, float leaf_size, bool calc_center);
@@ -54,6 +54,10 @@ public:
     template<typename PointT>
     void downSampleUniformFilter(const typename pcl::PointCloud<PointT>::Ptr& cloud_in, typename pcl::PointCloud<PointT>::Ptr& cloud_out, float radius);
     
+    // 滤波--点云索引过滤
+    template<typename PointT>
+    void filterIndices(const typename pcl::PointCloud<PointT>::Ptr& cloud_in, typename pcl::PointCloud<PointT>::Ptr& cloud_out, pcl::PointIndices::Ptr &indices, bool is_negative);
+
     // 滤波--Nan值点过滤
     template<typename PointT>
     void filterNaN(const typename pcl::PointCloud<PointT>::Ptr& cloud_in, typename pcl::PointCloud<PointT>::Ptr& cloud_out);
@@ -66,7 +70,31 @@ public:
     template<typename PointT>
     void filterRadiusOutlierRemoval(const typename pcl::PointCloud<PointT>::Ptr& cloud_in, typename pcl::PointCloud<PointT>::Ptr& cloud_out, float radius, int min_neighbors);
     
+    // 滤波--设置滤波条件
+    template<typename PointT>
+    typename pcl::FieldComparison<PointT>::Ptr filterCondition(const std::string &field_name, int val, const std::string &comparison);
+    
+    // 滤波--设置滤波条件
+    template<typename PointT>
+    typename pcl::FieldComparison<PointT>::Ptr filterCondition(const std::string &field_name, float val, const std::string &comparison);
+    
+    // 滤波--条件滤波
+    template<typename PointT>
+    void filterConditionRemovalFilter(const typename pcl::PointCloud<PointT>::Ptr &cloud_in, 
+        typename pcl::PointCloud<PointT>::Ptr &cloud_out,
+        const typename std::vector<typename pcl::FieldComparison<PointT>::Ptr> &cond_list, 
+        const std::string &cond_op, bool is_negative);
 
+    // 滤波--直通滤波
+    template<typename PointT>
+    void filterPassthrough(const typename pcl::PointCloud<PointT>::Ptr& cloud_in, typename pcl::PointCloud<PointT>::Ptr& cloud_out,const std::string& axis, float min, float max);
+    
+    // 滤波--裁剪盒滤波
+    template<typename PointT>
+    void filterCropBox(const typename pcl::PointCloud<PointT>::Ptr& cloud_in, typename pcl::PointCloud<PointT>::Ptr& cloud_out, float x_min, float x_max, float y_min, float y_max, float z_min, float z_max,bool is_negative);
+
+
+    
 
 
 

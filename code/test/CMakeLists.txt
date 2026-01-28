@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(test)
-
+set(CMAKE_CXX_STANDARD 17)
 # 添加 pcllibs 子目录
 add_subdirectory(../pcllibs ${CMAKE_CURRENT_BINARY_DIR}/pcllibs)
 
