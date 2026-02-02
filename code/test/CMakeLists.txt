@@ -13,7 +13,7 @@ if (TEST_VOXEL)
     target_link_libraries(test_voxel pcllibs)
 endif (TEST_VOXEL)  
 
-set(TEST_FILTER OFF  CACHE BOOL "Build test filter")
+set(TEST_FILTER ON  CACHE BOOL "Build test filter")
 if (TEST_FILTER)
     add_executable(test_filter test_filter.cpp) 
     target_link_libraries(test_filter pcllibs)

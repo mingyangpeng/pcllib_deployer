@@ -5,7 +5,7 @@
 #include "viewer.hpp"
 #include "io.hpp"
 #include "filter.hpp"
-
+#include "logger.h"
 
 
 namespace pcllibs
@@ -18,7 +18,9 @@ class PCLUTILS
 {
 public:
     PCLUTILS();
+    PCLUTILS(const std::string& log_path);
     ~PCLUTILS();
+
 
     // 显示单点云
     template<typename PointT>

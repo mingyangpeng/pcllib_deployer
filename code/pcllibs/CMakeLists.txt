@@ -18,6 +18,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 SET(CMAKE_CXX_FLAGS "-O3 -g -Wall ${CMAKE_CXX_FLAGS}")
 
+add_subdirectory(libs/log_util_lib)
+
 # dpkg -l | grep libpcl  pcl 1.14
 # 查找依赖包
 find_package(Boost REQUIRED COMPONENTS thread)
@@ -47,6 +49,7 @@ target_link_libraries(pcllibs PUBLIC
   ${PCL_LIBRARIES}
   ${Boost_LIBRARIES}
   ${OpenCV_LIBS}
+  log_util_lib
 )
 
 # 设置包含目录

@@ -9,6 +9,22 @@ PCLUTILS::PCLUTILS() {
     vtkObject::GlobalWarningDisplayOff();  // 关闭vtk的警告信息
     // 构造函数实现
 }
+PCLUTILS::PCLUTILS(const std::string& log_path) {
+    vtkObject::GlobalWarningDisplayOff();  // 关闭vtk的警告信息
+    // 构造函数实现
+    util::createFolder(log_path,false); // 创建文件夹 
+    LogConfig conf2 = {
+        .level = "trace",
+        .path = log_path,
+        .size = 5 * 1024 * 1024,
+        .count = 10,
+        .type = 2,  // 1: 输出到文件  2: 输出到文件和控制台 其他: 输出到控制台
+    };
+    INITLOG(conf2);
+
+}
+
+
 
 PCLUTILS::~PCLUTILS() {
     // 析构函数实现

@@ -22,10 +22,8 @@ void show_1(const typename pcl::PointCloud<PointT>::Ptr &cloud, const std::strin
     pcl::visualization::PCLVisualizer::Ptr viewer_ptr(new pcl::visualization::PCLVisualizer(window_name));
     viewer_ptr->addPointCloud<PointT>(cloud, "pcd");
     viewer_ptr->setBackgroundColor(0, 0, 0);
-
     viewer_ptr->addCoordinateSystem(1.0);
     viewer_ptr->initCameraParameters();
-
     bool exit_flag = false;
     viewer_ptr->registerKeyboardCallback([&exit_flag](const pcl::visualization::KeyboardEvent& event) {
         if (event.getKeySym() == "q" && event.keyDown()) {
@@ -44,8 +42,7 @@ void show_2(const typename pcl::PointCloud<PointT>::Ptr &cloud1,
             const typename pcl::PointCloud<PointT>::Ptr &cloud2,  
             const std::string& window_name="3D Viewer"){
     pcl::visualization::PCLVisualizer viewer(window_name);
-    viewer.setBackgroundColor(0, 0, 0); 
-
+    viewer.setBackgroundColor(0, 0, 0);  
     viewer.addPointCloud<PointT>(cloud1, "cloud1");
     viewer.addPointCloud<PointT>(cloud2, "cloud2");
     viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "cloud1");
@@ -88,9 +85,42 @@ void show_2(const typename pcl::PointCloud<PointT>::Ptr &cloud1,
     viewer.close(); 
 }
 
+// 显示pca方向
+template<typename PointT>
+void visualizePCA(
+    const typename pcl::PointCloud<PointT>::Ptr& cloud,
+    const Eigen::Vector4f& centroid,
+    const Eigen::Matrix3f& eigenvectors,
+    const Eigen::Vector3f& eigenvalues){
+    pcl::visualization::PCLVisualizer::Ptr viewer(new pcl::visualization::PCLVisualizer("PCA Visualization"));
+    viewer->setBackgroundColor(0, 0, 0); // 黑色背景
+    // 添加点云（白色）
+    pcl::visualization::PointCloudColorHandlerCustom<PointT> cloud_color(cloud, 255, 255, 255);
+    viewer->addPointCloud<PointT>(cloud, cloud_color, "cloud");
+    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "cloud");
+
+    // 质心坐标（x,y,z）
+    float cx = centroid(0), cy = centroid(1), cz = centroid(2);
+    // 计算箭头长度：特征值开方（归一化，避免长度过长/过短）
+    float scale = 1.0 / eigenvalues.maxCoeff(); // 归一化系数
+    Eigen::Vector3f ev1 = eigenvectors.col(0) * eigenvalues(0) * scale; // PC1
+    Eigen::Vector3f ev2 = eigenvectors.col(1) * eigenvalues(1) * scale; // PC2
+    Eigen::Vector3f ev3 = eigenvectors.col(2) * eigenvalues(2) * scale; // PC3
+
+    // 绘制PC1：红色箭头（第一主成分，最长）
+    viewer->addLine(PointT(cx, cy, cz), PointT(cx+ev1(0), cy+ev1(1), cz+ev1(2)), 1, 0, 0, "PC1");
+    viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 3, "PC1");
+    // 绘制PC2：绿色箭头（第二主成分）
+    viewer->addLine(PointT(cx, cy, cz), PointT(cx+ev2(0), cy+ev2(1), cz+ev2(2)), 0, 1, 0, "PC2");
+    viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 3, "PC2");
+    // 绘制PC3：蓝色箭头（第三主成分）
+    viewer->addLine(PointT(cx, cy, cz), PointT(cx+ev3(0), cy+ev3(1), cz+ev3(2)), 0, 0, 1, "PC3");
+    viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 3, "PC3");
+    // 绘制质心：黄色球体
+    viewer->addSphere(PointT(cx, cy, cz), 0.02, 1, 1, 0, "centroid");
+}
+
 } // namespace viewer
-
-
 } // namespace pcllibs
 
 

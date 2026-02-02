@@ -1,0 +1,1 @@
+/usr/bin/c++ -O3 -DNDEBUG CMakeFiles/spdlog_test.dir/demo.cpp.o -o spdlog_test  liblog_util_lib.a third_party/spdlog/libspdlog.a 
