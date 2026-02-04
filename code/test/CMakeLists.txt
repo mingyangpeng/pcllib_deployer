@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
 project(test)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 # 添加 pcllibs 子目录
 add_subdirectory(../pcllibs ${CMAKE_CURRENT_BINARY_DIR}/pcllibs)
 
@@ -13,13 +15,13 @@ if (TEST_VOXEL)
     target_link_libraries(test_voxel pcllibs)
 endif (TEST_VOXEL)  
 
-set(TEST_FILTER ON  CACHE BOOL "Build test filter")
+set(TEST_FILTER OFF  CACHE BOOL "Build test filter")
 if (TEST_FILTER)
     add_executable(test_filter test_filter.cpp) 
     target_link_libraries(test_filter pcllibs)
 endif (TEST_FILTER)  
 
-set(TEST_ICP OFF  CACHE BOOL "Build test icp")
+set(TEST_ICP ON  CACHE BOOL "Build test icp")
 if (TEST_ICP)
     add_executable(test_icp test_icp.cpp) 
     target_link_libraries(test_icp pcllibs)

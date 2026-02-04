@@ -1,23 +1,27 @@
+/**
+ * @copyright  Copyright (c) 2026 pengmingyang All Rights Reserved.
+ * @file filter.hpp
+ * @brief 点云滤波器
+ * @author pengmingyang
+ */
 #ifndef FILTER_HPP_
-
 #define FILTER_HPP_
 
-#include <pcl/point_types.h>
-#include <pcl/filters/extract_indices.h>
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/filters/random_sample.h>
-#include <pcl/filters/uniform_sampling.h>
-#include <pcl/filters/filter.h>
-#include <pcl/filters/statistical_outlier_removal.h>
-#include <pcl/filters/radius_outlier_removal.h>
 #include <pcl/filters/conditional_removal.h>
 #include <pcl/filters/crop_box.h>
+#include <pcl/filters/extract_indices.h>
+#include <pcl/filters/filter.h>
 #include <pcl/filters/passthrough.h>
+#include <pcl/filters/radius_outlier_removal.h>
+#include <pcl/filters/random_sample.h>
+#include <pcl/filters/statistical_outlier_removal.h>
+#include <pcl/filters/uniform_sampling.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/point_types.h>
 
+namespace pcllibs {
 
-namespace pcllibs{
-
-namespace filter{
+namespace filter {
 
 /**
  * @brief 点云索引
@@ -26,15 +30,15 @@ namespace filter{
  * @param indices 点云索引
  * @param is_negative 是否为负索引
  */
-template<typename PointT>
-void extractIndices(const typename pcl::PointCloud<PointT>::Ptr &cloud_in, 
-    typename pcl::PointCloud<PointT>::Ptr &cloud_out, 
-    pcl::PointIndices::Ptr &indices, bool is_negative){
+template <typename PointT>
+void extractIndices(const typename pcl::PointCloud<PointT>::Ptr& cloud_in,
+                    typename pcl::PointCloud<PointT>::Ptr& cloud_out,
+                    pcl::PointIndices::Ptr& indices, bool is_negative) {
     pcl::ExtractIndices<PointT> extract_indices;
     extract_indices.setInputCloud(cloud_in);
     extract_indices.setIndices(indices);
     extract_indices.setNegative(is_negative);
-    extract_indices.filter(*cloud_out);  
+    extract_indices.filter(*cloud_out);
 }
 
 /**
@@ -43,18 +47,23 @@ void extractIndices(const typename pcl::PointCloud<PointT>::Ptr &cloud_in,
  * @param cloud_out 输出点云
  * @param leaf_size 体素大小
  * @param calc_center 是否计算重心
- * @note calc_center为true时，开启所有数据降采样（包括计算重心），可提升重心计算效率
- * @note 适用于需要保持点云空间结构特征的场景, 大规模点云数据的预处理，减少点云数据量, 点云配准前的预处理,点云特征提取前的降采样
+ * @note
+ * calc_center为true时，开启所有数据降采样（包括计算重心），可提升重心计算效率
+ * @note 适用于需要保持点云空间结构特征的场景,
+ * 大规模点云数据的预处理，减少点云数据量,
+ * 点云配准前的预处理,点云特征提取前的降采样
  */
-template<typename PointT>
-void voxelGridFilter(const typename pcl::PointCloud<PointT>::Ptr &cloud_in, typename pcl::PointCloud<PointT>::Ptr &cloud_out, float leaf_size, bool calc_center)
-{
+template <typename PointT>
+void voxelGridFilter(const typename pcl::PointCloud<PointT>::Ptr& cloud_in,
+                     typename pcl::PointCloud<PointT>::Ptr& cloud_out,
+                     float leaf_size, bool calc_center) {
     pcl::VoxelGrid<PointT> voxel_grid_default;
     voxel_grid_default.setInputCloud(cloud_in);
-    voxel_grid_default.setLeafSize(leaf_size,leaf_size,leaf_size); // 体素大小
-    if(calc_center){
+    voxel_grid_default.setLeafSize(leaf_size, leaf_size,
+                                   leaf_size);  // 体素大小
+    if (calc_center) {
         // 关键：开启所有数据降采样（包括计算重心）
-        voxel_grid_default.setDownsampleAllData(true); 
+        voxel_grid_default.setDownsampleAllData(true);
         // 可选：关闭leaf layout保存，提升重心计算效率
         voxel_grid_default.setSaveLeafLayout(false);
     }
@@ -66,11 +75,14 @@ void voxelGridFilter(const typename pcl::PointCloud<PointT>::Ptr &cloud_in, type
  * @param cloud_in 输入点云
  * @param cloud_out 输出点云
  * @param sampling_ratio 采样比例
- * @note 适用于对计算速度要求较高，对空间结构要求不严格的场景,使用随机采样一致性方法进行下采样,通过sampling_ratio参数控制采样密度,计算效率较高,但可能丢失空间结构信息
+ * @note
+ * 适用于对计算速度要求较高，对空间结构要求不严格的场景,使用随机采样一致性方法进行下采样,通过sampling_ratio参数控制采样密度,计算效率较高,但可能丢失空间结构信息
  */
-template<typename PointT>
-void randomSampleFilter(const typename pcl::PointCloud<PointT>::Ptr &cloud_in, typename pcl::PointCloud<PointT>::Ptr &cloud_out, float sampling_ratio){
-    unsigned int sample  = cloud_in->size() * sampling_ratio;
+template <typename PointT>
+void randomSampleFilter(const typename pcl::PointCloud<PointT>::Ptr& cloud_in,
+                        typename pcl::PointCloud<PointT>::Ptr& cloud_out,
+                        float sampling_ratio) {
+    unsigned int sample = cloud_in->size() * sampling_ratio;
     pcl::RandomSample<PointT> random_sample_default;
     random_sample_default.setInputCloud(cloud_in);
     random_sample_default.setSample(sample);
@@ -84,14 +96,15 @@ void randomSampleFilter(const typename pcl::PointCloud<PointT>::Ptr &cloud_in, t
  * @param radius 搜索半径
  * @note 能较好保持空间分布特征
  */
-template<typename PointT>
-void uniformSampleFilter(const typename pcl::PointCloud<PointT>::Ptr &cloud_in, typename pcl::PointCloud<PointT>::Ptr &cloud_out, float radius){
-     pcl::UniformSampling<PointT> uniform_sampling;
-     uniform_sampling.setInputCloud(cloud_in);
-     uniform_sampling.setRadiusSearch(radius);
-     uniform_sampling.filter(*cloud_out);
+template <typename PointT>
+void uniformSampleFilter(const typename pcl::PointCloud<PointT>::Ptr& cloud_in,
+                         typename pcl::PointCloud<PointT>::Ptr& cloud_out,
+                         float radius) {
+    pcl::UniformSampling<PointT> uniform_sampling;
+    uniform_sampling.setInputCloud(cloud_in);
+    uniform_sampling.setRadiusSearch(radius);
+    uniform_sampling.filter(*cloud_out);
 }
-
 
 /**
  * @brief 去除点云中的NaN点
@@ -99,39 +112,38 @@ void uniformSampleFilter(const typename pcl::PointCloud<PointT>::Ptr &cloud_in, 
  * @param cloud_out 输出点云
  * @note 适用于去除无效点，确保后续处理的数据质量
  */
-template<typename PointT>
-void filterNaN(const typename pcl::PointCloud<PointT>::Ptr &cloud_in, typename pcl::PointCloud<PointT>::Ptr &cloud_out)
-{
+template <typename PointT>
+void filterNaN(const typename pcl::PointCloud<PointT>::Ptr& cloud_in,
+               typename pcl::PointCloud<PointT>::Ptr& cloud_out) {
     std::vector<int> indices;
     pcl::removeNaNFromPointCloud(*cloud_in, *cloud_out, indices);
 }
-
 
 /**
  * @brief 统计滤波去除离群点
  * @param cloud_in 输入点云
  * @param cloud_out 输出点云
  * @param nb_neighbors 计算平均距离的邻居点数
- * @param std_ratio 标准差倍数阈值 
+ * @param std_ratio 标准差倍数阈值
  * @param filter_nan 是否过滤NaN点(默认true)
  * @note 适用于去除噪声点，保持点云主要结构
  */
-template<typename PointT>
-void statisticalOutlierRemovalFilter(const typename pcl::PointCloud<PointT>::Ptr &cloud_in, 
-                                     typename pcl::PointCloud<PointT>::Ptr &cloud_out,
-                                     int nb_neighbors, float std_ratio,bool filter_nan)
-{
+template <typename PointT>
+void statisticalOutlierRemovalFilter(
+    const typename pcl::PointCloud<PointT>::Ptr& cloud_in,
+    typename pcl::PointCloud<PointT>::Ptr& cloud_out, int nb_neighbors,
+    float std_ratio, bool filter_nan) {
     pcl::StatisticalOutlierRemoval<PointT> sor;
-    if(filter_nan)
-    {
-        typename pcl::PointCloud<PointT>::Ptr temp_cloud(new pcl::PointCloud<PointT>);
+    if (filter_nan) {
+        typename pcl::PointCloud<PointT>::Ptr temp_cloud(
+            new pcl::PointCloud<PointT>);
         filterNaN<PointT>(cloud_in, temp_cloud);
         sor.setInputCloud(temp_cloud);
-    }else{
+    } else {
         sor.setInputCloud(cloud_in);
     }
-    sor.setMeanK(nb_neighbors);          // 设置计算平均距离的邻居点数
-    sor.setStddevMulThresh(std_ratio);   // 设置标准差倍数阈值
+    sor.setMeanK(nb_neighbors);  // 设置计算平均距离的邻居点数
+    sor.setStddevMulThresh(std_ratio);  // 设置标准差倍数阈值
     sor.filter(*cloud_out);
 }
 
@@ -142,34 +154,35 @@ void statisticalOutlierRemovalFilter(const typename pcl::PointCloud<PointT>::Ptr
  * @param radius 搜索半径
  * @param min_neighbors 在搜索半径内要求的最小邻居点数
  */
-template<typename PointT>
-void radiusOutlierRemovalFilter(const typename pcl::PointCloud<PointT>::Ptr &cloud_in,
-                                 typename pcl::PointCloud<PointT>::Ptr &cloud_out,
-                                 float radius, int min_neighbors)
-{
-        // 初始化半径滤波
-        pcl::RadiusOutlierRemoval<PointT> ror;
-        ror.setInputCloud(cloud_in);
-        ror.setRadiusSearch(radius);           
-        ror.setMinNeighborsInRadius(min_neighbors);    
-        // ror.setNegative(true); // 可选：反向滤波，仅保留孤立噪点（调试用）
-        ror.filter(*cloud_out);
+template <typename PointT>
+void radiusOutlierRemovalFilter(
+    const typename pcl::PointCloud<PointT>::Ptr& cloud_in,
+    typename pcl::PointCloud<PointT>::Ptr& cloud_out, float radius,
+    int min_neighbors) {
+    // 初始化半径滤波
+    pcl::RadiusOutlierRemoval<PointT> ror;
+    ror.setInputCloud(cloud_in);
+    ror.setRadiusSearch(radius);
+    ror.setMinNeighborsInRadius(min_neighbors);
+    // ror.setNegative(true); // 可选：反向滤波，仅保留孤立噪点（调试用）
+    ror.filter(*cloud_out);
 }
 
-
 /**
- * @brief 条件设置 
- * @param field_name 字段名 (如x,y,z,normal_x,normal_y,normal_z，curvature，intensity...)
+ * @brief 条件设置
+ * @param field_name 字段名
+ (如x,y,z,normal_x,normal_y,normal_z，curvature，intensity...)
  * @param val 比较值
  * @param comparison 比较操作符(>, >=, <, <=, =, !=)
- * @note    pcl::ComparisonOps::GT	>	 
+ * @note    pcl::ComparisonOps::GT	>
             pcl::ComparisonOps::GE	>=
-            pcl::ComparisonOps::LT	<  
-            pcl::ComparisonOps::LE	<= 
-            pcl::ComparisonOps::EQ	=  
+            pcl::ComparisonOps::LT	<
+            pcl::ComparisonOps::LE	<=
+            pcl::ComparisonOps::EQ	=
 */
-template<typename PointT>
-typename pcl::FieldComparison<PointT>::Ptr removalCondition(const std::string &field_name, float val, const std::string &comparison){
+template <typename PointT>
+typename pcl::FieldComparison<PointT>::Ptr removalCondition(
+    const std::string& field_name, float val, const std::string& comparison) {
     pcl::ComparisonOps::CompareOp op;
     if (comparison == ">") {
         op = pcl::ComparisonOps::GT;
@@ -180,28 +193,31 @@ typename pcl::FieldComparison<PointT>::Ptr removalCondition(const std::string &f
     } else if (comparison == "<=") {
         op = pcl::ComparisonOps::LE;
     } else if (comparison == "=") {
-        op = pcl::ComparisonOps::EQ; 
+        op = pcl::ComparisonOps::EQ;
     } else {
         throw std::runtime_error("Invalid comparison operator");
         exit(-1);
     }
-    typename pcl::FieldComparison<PointT>::Ptr cond(new pcl::FieldComparison<PointT>(field_name, op, val));
+    typename pcl::FieldComparison<PointT>::Ptr cond(
+        new pcl::FieldComparison<PointT>(field_name, op, val));
     return cond;
 }
 
 /**
- * @brief 条件设置 
- * @param field_name 字段名 (如x,y,z,normal_x,normal_y,normal_z，curvature，intensity...)
+ * @brief 条件设置
+ * @param field_name 字段名
+ (如x,y,z,normal_x,normal_y,normal_z，curvature，intensity...)
  * @param val 比较值
  * @param comparison 比较操作符(>, >=, <, <=, =, !=)
- * @note    pcl::ComparisonOps::GT	>	 
+ * @note    pcl::ComparisonOps::GT	>
             pcl::ComparisonOps::GE	>=
-            pcl::ComparisonOps::LT	<  
-            pcl::ComparisonOps::LE	<= 
-            pcl::ComparisonOps::EQ	=  
+            pcl::ComparisonOps::LT	<
+            pcl::ComparisonOps::LE	<=
+            pcl::ComparisonOps::EQ	=
 */
-template<typename PointT>
-typename pcl::FieldComparison<PointT>::Ptr removalCondition(const std::string &field_name, int val, const std::string &comparison){
+template <typename PointT>
+typename pcl::FieldComparison<PointT>::Ptr removalCondition(
+    const std::string& field_name, int val, const std::string& comparison) {
     pcl::ComparisonOps::CompareOp op;
     if (comparison == ">") {
         op = pcl::ComparisonOps::GT;
@@ -212,15 +228,15 @@ typename pcl::FieldComparison<PointT>::Ptr removalCondition(const std::string &f
     } else if (comparison == "<=") {
         op = pcl::ComparisonOps::LE;
     } else if (comparison == "=") {
-        op = pcl::ComparisonOps::EQ; 
+        op = pcl::ComparisonOps::EQ;
     } else {
         throw std::runtime_error("Invalid comparison operator");
-        exit(-1);   
+        exit(-1);
     }
-    typename pcl::FieldComparison<PointT>::Ptr cond(new pcl::FieldComparison<PointT>(field_name, op, val));
+    typename pcl::FieldComparison<PointT>::Ptr cond(
+        new pcl::FieldComparison<PointT>(field_name, op, val));
     return cond;
 }
-
 
 /**
  * @brief 条件滤波,支持多条件组合
@@ -229,36 +245,39 @@ typename pcl::FieldComparison<PointT>::Ptr removalCondition(const std::string &f
  * @param cond_list 条件list
  * @param cond_op 条件操作符 (AND, OR)
  * @param is_negative 是否反向滤波
- * 
+ *
  */
-template<typename PointT>
-void conditionRemovalFilter(const typename pcl::PointCloud<PointT>::Ptr &cloud_in, typename pcl::PointCloud<PointT>::Ptr &cloud_out,
-                            const typename std::vector<typename pcl::FieldComparison<PointT>::Ptr> &cond_list, 
-                            const std::string &cond_op, bool is_negative){
-    typename pcl::ConditionBase<PointT>::Ptr conds; 
-    if(cond_op=="and"){
+template <typename PointT>
+void conditionRemovalFilter(
+    const typename pcl::PointCloud<PointT>::Ptr& cloud_in,
+    typename pcl::PointCloud<PointT>::Ptr& cloud_out,
+    const typename std::vector<typename pcl::FieldComparison<PointT>::Ptr>&
+        cond_list,
+    const std::string& cond_op, bool is_negative) {
+    typename pcl::ConditionBase<PointT>::Ptr conds;
+    if (cond_op == "and") {
         conds.reset(new pcl::ConditionAnd<PointT>());
-    }else{
+    } else {
         conds.reset(new pcl::ConditionOr<PointT>());
-    }         
-    for(auto cond: cond_list){
+    }
+    for (auto cond : cond_list) {
         conds->addComparison(cond);
-    } 
+    }
 
     pcl::ConditionalRemoval<PointT> cond_rem(true);
     cond_rem.setCondition(conds);
     cond_rem.setInputCloud(cloud_in);
-    cond_rem.setKeepOrganized(true); 
+    cond_rem.setKeepOrganized(true);
     cond_rem.filter(*cloud_out);
 
-    if(is_negative){
+    if (is_negative) {
         pcl::PointIndices::Ptr removed_indices(new pcl::PointIndices());
         cond_rem.getRemovedIndices(*removed_indices);
         cloud_out->clear();
         extractIndices<PointT>(cloud_in, cloud_out, removed_indices, false);
-    }   
+    }
 }
-   
+
 /**
  * @brief 裁剪盒滤波
  * @param cloud_in 输入点云
@@ -271,8 +290,11 @@ void conditionRemovalFilter(const typename pcl::PointCloud<PointT>::Ptr &cloud_i
  * @param z_max z轴最大值
  * @param is_negative 是否反向滤波
  */
-template<typename PointT>
-void cropBoxFilter(const typename pcl::PointCloud<PointT>::Ptr &cloud_in, typename pcl::PointCloud<PointT>::Ptr &cloud_out, float x_min, float x_max, float y_min, float y_max, float z_min, float z_max, bool is_negative=false){
+template <typename PointT>
+void cropBoxFilter(const typename pcl::PointCloud<PointT>::Ptr& cloud_in,
+                   typename pcl::PointCloud<PointT>::Ptr& cloud_out,
+                   float x_min, float x_max, float y_min, float y_max,
+                   float z_min, float z_max, bool is_negative = false) {
     pcl::CropBox<PointT> crop_filter;
     crop_filter.setInputCloud(cloud_in);
     crop_filter.setMin(Eigen::Vector4f(x_min, y_min, z_min, 1.0f));
@@ -289,8 +311,10 @@ void cropBoxFilter(const typename pcl::PointCloud<PointT>::Ptr &cloud_in, typena
  * @param val_min 最小值
  * @param val_max 最大值
  */
-template<typename PointT>
-void passThroughFilter(const typename pcl::PointCloud<PointT>::Ptr &cloud_in, typename pcl::PointCloud<PointT>::Ptr &cloud_out, const std::string &axis, float val_min, float val_max){
+template <typename PointT>
+void passThroughFilter(const typename pcl::PointCloud<PointT>::Ptr& cloud_in,
+                       typename pcl::PointCloud<PointT>::Ptr& cloud_out,
+                       const std::string& axis, float val_min, float val_max) {
     pcl::PassThrough<PointT> pass;
     pass.setInputCloud(cloud_in);
     pass.setFilterFieldName(axis);
@@ -298,12 +322,7 @@ void passThroughFilter(const typename pcl::PointCloud<PointT>::Ptr &cloud_in, ty
     pass.filter(*cloud_out);
 }
 
-
-
-
-
-
 //////////////////////////////////////////////////////////////////////////
-}// namespace filter
-}// namespace pcllibs
-#endif // FILTER_HPP_
+}  // namespace filter
+}  // namespace pcllibs
+#endif  // FILTER_HPP_

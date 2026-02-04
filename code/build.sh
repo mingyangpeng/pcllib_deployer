@@ -1,3 +1,3 @@
-cd /root/code/build
-cmake ../pcllibs -DCMAKE_BUILD_TYPE=Release  
+cd /root/code/test/build
+cmake .. -DCMAKE_BUILD_TYPE=Release  
 make -j
