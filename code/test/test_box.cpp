@@ -30,7 +30,7 @@ int main() {
         pcl::PointCloud<pcl::PointXYZ>::Ptr stands(new pcl::PointCloud<pcl::PointXYZ>);
         filter::cropPointCloudBy8Vertices<pcl::PointXYZ>(cloud, obb.vertices, stands, false);
         pcl_ptr->showPointCloud<pcl::PointXYZ>( stands , "stands");
-        pcl_ptr->showPointCloud<pcl::PointXYZ>(cloud1, stands , "all stands");
+        pcl_ptr->showPointCloud<pcl::PointXYZ>(cloud, stands , "all stands");
 
 
         // pcl_ptr->showPointCloud<pcl::PointXYZ>(cloud, cloud1,

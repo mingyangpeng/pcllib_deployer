@@ -334,62 +334,11 @@ void calcBoxParamsFrom8Vertices(const std::vector<Eigen::Vector3f>& vertices,
                                 Eigen::Matrix3f& rotation);
 /**
  * @brief 基于8顶点包围盒的裁剪盒滤波
- * @param input_cloud 输入点云
- * @param box_vertices 包围盒8顶点
- * @param output_cloud 输出点云
- * @param is_negative 是否反向滤波
+ * @param cloud_in 输入点云
+ * @param box_8_vertices 包围盒8顶点
+ * @param cloud_out 输出点云 
  */
-template<typename PointT>
-void cropPointCloudBy8Vertices111(const typename pcl::PointCloud<PointT>::Ptr& input_cloud,
-                               const std::vector<Eigen::Vector3f>& box_vertices,
-                               typename pcl::PointCloud<PointT>::Ptr& output_cloud,
-                               bool is_negative = false) { 
-
-    // 2. 从8顶点解算：包围盒中心 + 3×3旋转矩阵 + 三轴尺寸
-    Eigen::MatrixXf vertices_mat(3, 8);
-    for (int i = 0; i < 8; ++i) vertices_mat.col(i) = box_vertices[i];
-
-    Eigen::Vector3f box_center = vertices_mat.rowwise().mean();
-    Eigen::MatrixXf centered_vertices = vertices_mat.colwise() - box_center;
-
-    // 2. 修正SVD分解和旋转矩阵计算
-    Eigen::JacobiSVD<Eigen::MatrixXf> svd(centered_vertices, Eigen::ComputeFullV);
-    Eigen::Matrix3f box_rot_mat = svd.matrixV(); // 修正：不转置
-    if (box_rot_mat.determinant() < 0) { // 确保右手坐标系
-        box_rot_mat.col(2) *= -1;
-    }
-
-    // 3. 计算盒子尺寸
-    Eigen::MatrixXf rotated_vertices = box_rot_mat * centered_vertices;
-    Eigen::Vector3f min_pt = rotated_vertices.rowwise().minCoeff();
-    Eigen::Vector3f max_pt = rotated_vertices.rowwise().maxCoeff();
-    Eigen::Vector3f box_size = max_pt - min_pt;
-    box_size = box_size.array().max(1e-6f);
-    Eigen::Vector3f half_size = box_size / 2.0f;
-
-    // 4. 设置CropBox滤波器
-    pcl::CropBox<PointT> crop_box;
-    crop_box.setInputCloud(input_cloud);
-    crop_box.setNegative(is_negative);
-
-    // 5. 修正变换矩阵设置顺序
-    Eigen::Affine3f box_transform = Eigen::Affine3f::Identity();
-    box_transform.translate(box_center); // 先平移
-    box_transform.rotate(box_rot_mat);    // 后旋转
-    crop_box.setTransform(box_transform);
-
-    // 6. 设置裁剪范围（修正w分量）
-    crop_box.setMin(Eigen::Vector4f(-half_size.x(), -half_size.y(), -half_size.z(), 1.0f));
-    crop_box.setMax(Eigen::Vector4f(half_size.x(), half_size.y(), half_size.z(), 1.0f));
-
-    // 7. 执行滤波
-    crop_box.filter(*output_cloud);
-
-    // 简洁日志：裁剪结果统计
-    PCL_INFO("裁剪完成：原始点云[%lu] → 裁剪后[%lu]\n", input_cloud->size(), output_cloud->size());
-}
-
-template<typename PointT>
+ template<typename PointT>
 void cropPointCloudBy8Vertices(const typename pcl::PointCloud<PointT>::Ptr& cloud_in,
     const std::vector<Eigen::Vector3f>& box_8_vertices,
     typename pcl::PointCloud<PointT>::Ptr& cloud_out,
@@ -410,15 +359,7 @@ for (int i = 0; i < 8; ++i) {
 }
 
 OBBDate obb;
-util::calcOBB<PointT>(box_cloud, obb);
-
-// 拟合OBB（中心、旋转矩阵、三维尺寸）
-// pcl::MomentOfInertiaEstimation<PointT> moe;
-// moe.setInputCloud(box_cloud);
-// moe.compute();
-// PointT obb_center;
-// Eigen::Matrix3f obb_rot;
-// Eigen::Vector3f obb_size;
+util::calcOBB<PointT>(box_cloud, obb); 
 
 PointT obb_center;
 obb_center.x = obb.center.x();
@@ -428,12 +369,7 @@ obb_center.z = obb.center.z();
 Eigen::Matrix3f obb_rot = obb.axes;  // 修正：使用axes而非rotation
 Eigen::Vector3f obb_size = obb.extents * 2.0f;  // 修正：extents是半尺寸，需乘以2
 
-// 校验OBB尺寸有效性
-if (obb_size.x() < epsilon || obb_size.y() < epsilon || obb_size.z() < epsilon) {
-    PCL_ERROR("OBB拟合失败：8个顶点构成无效包围盒（如共面/重合）！\n");
-    return;
-}
-
+ 
 // ===================== 步骤3：计算OBB局部系筛选阈值 =====================
 // 注意：现在obb_size已经是全尺寸
 float x_thresh = obb.extents.x() - epsilon;  // 直接使用extents
