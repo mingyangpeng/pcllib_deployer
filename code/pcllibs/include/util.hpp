@@ -6,6 +6,9 @@
  */
 #ifndef UTIL_HPP_
 #define UTIL_HPP_
+#include <pcl/common/centroid.h>
+#include <pcl/common/pca.h>
+#include <pcl/features/moment_of_inertia_estimation.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/point_types.h>
@@ -18,6 +21,8 @@
 #include <iostream>
 #include <string>
 #include <thread>
+
+#include "datastruct.hpp"
 
 namespace pcllibs {
 namespace util {
@@ -80,7 +85,7 @@ void computeCloudNormal(
     cloud_normal->sensor_origin_ = cloud_in->sensor_origin_;
     cloud_normal->sensor_orientation_ = cloud_in->sensor_orientation_;
     if constexpr (std::is_same_v<PointOutT, pcl::PointNormal>) {
-        #pragma omp parallel for
+#pragma omp parallel for
         for (size_t i = 0; i < cloud_in->size(); ++i) {
             cloud_normal->points[i].x = cloud_in->points[i].x;
             cloud_normal->points[i].y = cloud_in->points[i].y;
@@ -99,6 +104,50 @@ void computeCloudNormal(
     }
     ne.setViewPoint(0.0f, 0.0f, 1.0f);
     ne.compute(*cloud_normal);
+}
+
+void getOBBCorners(const OBBDate& obb, std::vector<Eigen::Vector3f>& vertices);
+
+template <typename PointT>
+bool calcOBB(const typename pcl::PointCloud<PointT>::Ptr& cloud, OBBDate& obb) {
+    try {
+        // 使用PCL的MomentOfInertiaEstimation计算OBB
+        pcl::MomentOfInertiaEstimation<pcl::PointXYZ> moe;
+        moe.setInputCloud(cloud);
+        moe.compute();
+
+        pcl::PointXYZ min_point, max_point, position;
+        Eigen::Matrix3f rotational_matrix;
+
+        moe.getOBB(min_point, max_point, position, rotational_matrix);
+
+        // 填充OBB结构体
+        obb.center = Eigen::Vector3f(position.x, position.y, position.z);
+        obb.min_point = Eigen::Vector3f(min_point.x, min_point.y, min_point.z);
+        obb.max_point = Eigen::Vector3f(max_point.x, max_point.y, max_point.z);
+        obb.axes = rotational_matrix;
+
+        // 计算半尺寸
+        obb.extents = (obb.max_point - obb.min_point) / 2.0f;
+
+        // 计算OBB的8个顶点
+        std::vector<Eigen::Vector3f> vertices;
+        getOBBCorners(obb, vertices);
+        obb.vertices = vertices;
+
+        // 计算原始坐标系下的最小和最大点
+        obb.min_point = vertices[0];
+        obb.max_point = vertices[0];
+        for (size_t i = 1; i < vertices.size(); ++i) {
+            obb.min_point = obb.min_point.cwiseMin(vertices[i]);
+            obb.max_point = obb.max_point.cwiseMax(vertices[i]);
+        }
+
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << "Error computing OBB: " << e.what() << std::endl;
+        return false;
+    }
 }
 
 }  // namespace util

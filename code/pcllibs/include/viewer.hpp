@@ -169,10 +169,10 @@ void showNormal(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
 
 // 显示pca方向
 template <typename PointT>
-void visualizePCA(const typename pcl::PointCloud<PointT>::Ptr& cloud,
-                  const Eigen::Vector4f& centroid,
-                  const Eigen::Matrix3f& eigenvectors,
-                  const Eigen::Vector3f& eigenvalues) {
+void showPCA(const typename pcl::PointCloud<PointT>::Ptr& cloud,
+             const Eigen::Vector4f& centroid,
+             const Eigen::Matrix3f& eigenvectors,
+             const Eigen::Vector3f& eigenvalues) {
     pcl::visualization::PCLVisualizer::Ptr viewer(
         new pcl::visualization::PCLVisualizer("PCA Visualization"));
     viewer->setBackgroundColor(0, 0, 0);  // 黑色背景
@@ -211,6 +211,58 @@ void visualizePCA(const typename pcl::PointCloud<PointT>::Ptr& cloud,
         pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 3, "PC3");
     // 绘制质心：黄色球体
     viewer->addSphere(PointT(cx, cy, cz), 0.02, 1, 1, 0, "centroid");
+}
+
+// 显示OBB
+template <typename PointT>
+void showOBB(const typename pcl::PointCloud<PointT>::Ptr& cloud,
+             const OBBDate& obb,
+             const std::string& window_name = "OBB Viewer") {
+    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(
+        new pcl::visualization::PCLVisualizer(window_name));
+    viewer->setBackgroundColor(0, 0, 0);
+
+    // 添加点云
+    pcl::visualization::PointCloudColorHandlerCustom<PointT> cloud_color(
+        cloud, 175, 238, 238);
+    viewer->addPointCloud<PointT>(cloud, cloud_color, "cloud");
+    viewer->setPointCloudRenderingProperties(
+        pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "cloud");
+
+    // 添加OBB的8个顶点
+    pcl::PointCloud<pcl::PointXYZ>::Ptr obb_vertices(
+        new pcl::PointCloud<pcl::PointXYZ>);
+    for (const auto& vertex : obb.vertices) {
+        obb_vertices->push_back(
+            pcl::PointXYZ(vertex.x(), vertex.y(), vertex.z()));
+    }
+
+    // 绘制OBB的边
+    std::vector<std::pair<int, int>> edges = {
+        {0, 1},  {1, 2}, {2, 3}, {3, 0},  // 底面
+        {4, 5}, {5, 6}, {6, 7}, {7, 4},  // 顶面
+        {0, 4}, {1, 5}, {2, 6}, {3, 7}   // 连接顶面和底面的边
+    };
+
+    // 为每条边添加线段
+    for (size_t i = 0; i < edges.size(); ++i) {
+        const auto& edge = edges[i];
+        std::string line_id = "line_" + std::to_string(i);
+        viewer->addLine<pcl::PointXYZ>(obb_vertices->points[edge.first],
+                                       obb_vertices->points[edge.second], 1.0,
+                                       0.0, 1.0,  // 红色
+                                       line_id);
+        viewer->setShapeRenderingProperties(
+            pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 2, line_id);
+    }
+
+    // 添加坐标系
+    viewer->addCoordinateSystem(1.0);
+    viewer->initCameraParameters();
+
+    while (!viewer->wasStopped()) {
+        viewer->spinOnce();
+    }
 }
 
 }  // namespace viewer

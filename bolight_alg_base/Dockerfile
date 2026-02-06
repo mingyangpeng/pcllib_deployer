@@ -25,6 +25,7 @@ RUN apt update && apt install -y \
     python3-vcstool \
     python3-venv \
     python3-pip \
+    ccache \
 && apt clean \
 && rm -rf /var/lib/apt/lists/*
 

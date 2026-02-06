@@ -13,7 +13,7 @@
 #include "register.hpp"
 #include "util.hpp"
 #include "viewer.hpp"
-
+#include "datastruct.hpp"
 namespace pcllibs {
 // #define TIME_SCOPE(name) ScopedTimer _timer_##name(name)
 #define TIME_SCOPE(name) util::ScopedTimer __timer_instance__(name)
@@ -52,6 +52,16 @@ class PCLUTILS {
                     const pcl::PointCloud<pcl::Normal>::Ptr& normals,
                     const std::string& window_name = "3D Viewer",
                     int per_num_show = 5);
+
+    // 显示PCA方向  
+    template<typename PointT>
+    void showPCA(const typename pcl::PointCloud<PointT>::Ptr& cloud,
+        const Eigen::Vector4f& centroid,
+        const Eigen::Matrix3f& eigenvectors,
+        const Eigen::Vector3f& eigenvalues); 
+    // 显示OBB包围盒
+    void showOBB();
+
 
     // 加载点云
     template <typename PointT>

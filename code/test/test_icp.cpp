@@ -35,12 +35,12 @@ int main() {
                                                "cloud1 -- cloud");
 
         // icp p2p
-        Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
-        bool isok = pcl_ptr->ICPPointToPoint<pcl::PointXYZ>(
-            cloud, cloud1, transform, 3000, 0.5, 1e-8, 1e-6);
-        pcl_ptr->showPointCloud<pcl::PointXYZ>(cloud, cloud1, transform,
-                                               Eigen::Matrix4f::Identity(),
-                                               "cloud1 -- cloud");
-        std::cout << "isok: " << isok << std::endl;
+        // Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
+        // bool isok = pcl_ptr->ICPPointToPoint<pcl::PointXYZ>(
+        //     cloud, cloud1, transform, 3000, 0.5, 1e-8, 1e-6);
+        // pcl_ptr->showPointCloud<pcl::PointXYZ>(cloud, cloud1, transform,
+        //                                        Eigen::Matrix4f::Identity(),
+        //                                        "cloud1 -- cloud");
+        // std::cout << "isok: " << isok << std::endl;
     }
 }

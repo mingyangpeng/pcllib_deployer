@@ -105,6 +105,12 @@ void PCLUTILS::showNormal(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
 }
 
 template <typename PointT>
+void PCLUTILS::showPCA(const typename pcl::PointCloud<PointT>::Ptr& cloud,
+                       const Eigen::Vector4f& centroid,
+                       const Eigen::Matrix3f& eigenvectors,
+                       const Eigen::Vector3f& eigenvalues) {}
+
+template <typename PointT>
 void PCLUTILS::loadPointCloud(const std::string& file_name,
                               typename pcl::PointCloud<PointT>::Ptr& cloud,
                               float scale) {
