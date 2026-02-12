@@ -20,6 +20,7 @@ int main() {
         new pcl::PointCloud<pcl::PointNormal>);
     {
         TIME_SCOPE("icp");
+
         // 计算法线1
         // pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new
         // pcl::PointCloud<pcl::Normal>);
@@ -31,8 +32,32 @@ int main() {
         // util::computeCloudNormal<pcl::PointXYZ, pcl::PointNormal>(
         //     cloud, cloud_normals, 0.1, 30);
         // pcl_ptr->showNormal(cloud_normals, "cloud_normals");
-        pcl_ptr->showPointCloud<pcl::PointXYZ>(cloud, cloud1,
-                                               "cloud1 -- cloud");
+        // pcl_ptr->showPointCloud<pcl::PointXYZ>(cloud, cloud1,
+        //                                        "cloud1 -- cloud");
+
+        // 先裁剪
+
+        Eigen::Matrix4f transform;
+        bool isok =
+            pcl_ptr->PCARegister<pcl::PointXYZ>(cloud, cloud1, transform);
+
+        std::cout << "is ok:" << isok << std::endl;
+        std::cout << "transform:\n" << transform << std::endl;
+        pcl_ptr->showPointCloud<pcl::PointXYZ>(cloud, cloud1, transform,
+                                               Eigen::Matrix4f::Identity(),
+                                               "pca cloud1 -- cloud");
+
+        OBBDate obb;
+        util::calcOBB<pcl::PointXYZ>(cloud, obb);
+        float length = 1.3;
+        for (int i = 0; i < 4; i++) {
+            obb.vertices[i].z() = obb.vertices[i + 4].z() - length;
+        }
+        viewer::showOBB<pcl::PointXYZ>(cloud, obb, "obb");
+        pcl::PointCloud<pcl::PointXYZ>::Ptr stands(
+            new pcl::PointCloud<pcl::PointXYZ>);
+        filter::cropPointCloudBy8Vertices<pcl::PointXYZ>(cloud, obb.vertices,
+                                                         stands, false);
 
         // icp p2p
         // Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();

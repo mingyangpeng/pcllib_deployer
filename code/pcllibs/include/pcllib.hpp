@@ -160,6 +160,12 @@ class PCLUTILS {
                          float max_corr_dist, float trans_epsilon,
                          float fitness_epsilon);
 
+
+    template <typename PointT>
+    bool PCARegister(const typename pcl::PointCloud<PointT>::Ptr& cloud_src,
+                     const typename pcl::PointCloud<PointT>::Ptr& cloud_tgt,
+                     Eigen::Matrix4f& transform);
+
 };  // class PCLUTILS
 
 }  // namespace pcllibs

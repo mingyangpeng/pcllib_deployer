@@ -485,4 +485,35 @@ template bool PCLUTILS::ICPPointToPoint<pcl::PointNormal>(
     Eigen::Matrix4f& transform, int max_iter, float max_corr_dist,
     float trans_epsilon, float fitness_epsilon);
 
+template <typename PointT>
+bool PCLUTILS::PCARegister(const typename pcl::PointCloud<PointT>::Ptr& cloud_src,
+                 const typename pcl::PointCloud<PointT>::Ptr& cloud_tgt,
+                 Eigen::Matrix4f& transform) {
+    // try {
+        std::cout<<"debug1"<<std::endl;
+        regist::PCA<PointT>(cloud_src, cloud_tgt, transform);
+        return true;
+    // } catch (const std::exception& e) {
+    //     std::cout << "PCARegister error" << e.what() << std::endl;
+    //     return false;
+    // }
+}
+template bool PCLUTILS::PCARegister<pcl::PointXYZ>(
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_src,
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_tgt,
+    Eigen::Matrix4f& transform);
+
+// template bool PCARegister<pcl::PointXYZI>(
+//     const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud_src,
+//     const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud_tgt,
+//     Eigen::Matrix4f& transform);
+// template bool PCARegister<pcl::PointXYZRGB>(
+//     const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud_src,
+//     const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud_tgt,
+//     Eigen::Matrix4f& transform);
+// template bool PCARegister<pcl::PointNormal>(
+//     const pcl::PointCloud<pcl::PointNormal>::Ptr& cloud_src,
+//     const pcl::PointCloud<pcl::PointNormal>::Ptr& cloud_tgt,
+//     Eigen::Matrix4f& transform);
+
 }  // namespace pcllibs

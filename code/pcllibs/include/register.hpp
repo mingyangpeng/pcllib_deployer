@@ -16,8 +16,36 @@
 
 #include "util.hpp"
 
+/**
+ * 分层降采样 icp 
+ */
+
 namespace pcllibs {
 namespace regist {
+template <typename PointT>
+std::pair<Eigen::Matrix3f, Eigen::Vector3f> pca_compute_shape(
+    const typename pcl::PointCloud<PointT>::Ptr& cloud) {
+    pcl::MomentOfInertiaEstimation<PointT> mie;
+    mie.setInputCloud(cloud);
+    mie.compute();
+    Eigen::Vector4f Centroid;  // 质心
+    pcl::compute3DCentroid(*cloud,
+                           Centroid);  // 计算质心，质心为齐次坐标（c0,c1,c2,1）
+
+    Eigen::Matrix3f covariance_matrix;  // 协方差矩阵
+    pcl::computeCovarianceMatrix(*cloud, Centroid, covariance_matrix);
+    Eigen::JacobiSVD<Eigen::Matrix3f> svd(
+        covariance_matrix, Eigen::ComputeFullU | Eigen::ComputeFullV);
+
+    PointT minPt, maxPt;
+    pcl::getMinMax3D(*cloud, minPt, maxPt);
+    Eigen::Vector3f shapeCenter =
+        0.5f * (minPt.getVector3fMap() + maxPt.getVector3fMap());
+    // 获取 U, Sigma, V 矩阵
+    Eigen::Matrix3f U = svd.matrixU();
+
+    return std::make_pair(U, shapeCenter);
+}
 
 /**
  * @brief pca 信息计算
@@ -25,17 +53,29 @@ namespace regist {
  * @param eigenvalues 返回特征值
  * @param eigenvectors 返回特征向量
  * @param centroid 返回质心
+ * @param is_geometric_cebter 是否使用几何质心, 否则使用点云质心
  */
 template <typename PointT>
 void PCAInfos(const typename pcl::PointCloud<PointT>::Ptr& cloud_in,
               Eigen::Vector3f& eigenvalues,   // 特征值
               Eigen::Matrix3f& eigenvectors,  // 特征向量
-              Eigen::Vector4f& centroid) {    // 质心
+              Eigen::Vector3f& centroid,
+              bool is_geometric_cebter) {  // 质心
     pcl::PCA<PointT> pca;
     pca.setInputCloud(cloud_in);
     eigenvalues = pca.getEigenValues();
     eigenvectors = pca.getEigenVectors();
-    centroid = pca.getMean();
+
+    if (is_geometric_cebter) {
+        PointT minPt, maxPt;
+        pcl::getMinMax3D(*cloud_in, minPt, maxPt);
+        Eigen::Vector3f shapeCenter =
+            0.5f * (minPt.getVector3fMap() + maxPt.getVector3fMap());
+        centroid = shapeCenter;
+    } else {
+        Eigen::Vector4f cc = pca.getMean();
+        centroid = cc.head(3);
+    }
 }
 
 /**
@@ -123,33 +163,56 @@ bool icpPToPlane(const pcl::PointCloud<pcl::PointNormal>::Ptr& src_normal,
  * @param transformation_epsilon 变换矩阵变化阈值
  */
 template <typename PointT>
-void icpNormal(const pcl::PointCloud<PointT>& src,
-               const pcl::PointCloud<PointT>& tgt,
+void icpNormal(const typename pcl::PointCloud<PointT>& src,
+               const typename pcl::PointCloud<PointT>& tgt,
                pcl::PointCloud<PointT>& output,
                Eigen::Matrix4f& transformation_matrix, int max_iterations,
                float transformation_epsilon, float euclidean_fitness_epsilon,
                float max_correspondence_distance) {}
 
 /**
- * @brief icp pca 点云配准
+ * @brief pca 点云配准
  * @param src 输入点云
  * @param tgt 目标点云
  * @param output 输出点云
  * @param transformation_matrix 变换矩阵
- * @param max_iterations 最大迭代次数
- * @param transformation_epsilon 变换矩阵变化阈值
  */
 template <typename PointT>
-void PCA(const pcl::PointCloud<PointT>& src, const pcl::PointCloud<PointT>& tgt,
-         Eigen::Matrix4f& transformation_matrix, int max_iterations,
-         float transformation_epsilon, float euclidean_fitness_epsilon,
-         float max_correspondence_distance) {}
+void PCA(const typename pcl::PointCloud<PointT>::Ptr& src,
+         const typename pcl::PointCloud<PointT>::Ptr& tgt,
+         Eigen::Matrix4f& transformation_matrix) {
+    // 计算PCA特征
+    Eigen::Vector3f Fp, Fx;  // 特征值
+    Eigen::Matrix3f Up, Ux;  // 特征向量
+    Eigen::Vector3f Cp, Cx;  // 质心
+
+    PCAInfos<PointT>(src, Fp, Up, Cp, true);
+    PCAInfos<PointT>(tgt, Fx, Ux, Cx, true);
+    std::cout << "Cp\n" << Cp << std::endl;
+    std::cout << "Cx\n" << Cx << std::endl;
+
+    // 特征向量方向对齐
+    for (int i = 0; i < 3; ++i) {
+        if (Up.col(i).dot(Ux.col(i)) < 0) {
+            Ux.col(i) = -Ux.col(i);
+        }
+    }
+
+    // 计算变换矩阵
+    Eigen::Matrix3f R0 = Ux * Up.transpose();
+    // Eigen::Vector3f T0 = Cx.head(3) - R0 * Cp.head(3);  // 只取前3个元素
+    Eigen::Vector3f T0 = Cx - R0 * Cp;  // 只取前3个元素
+
+    Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
+    T.block<3, 3>(0, 0) = R0;
+    T.block<3, 1>(0, 3) = T0;
+    transformation_matrix = T;
+}
 
 /**
  * @brief icp ndt 点云配准
  * @param src 输入点云
  * @param tgt 目标点云
- * @param output 输出点云
  * @param transformation_matrix 变换矩阵
  * @param max_iterations 最大迭代次数
  * @param transformation_epsilon 变换矩阵变化阈值

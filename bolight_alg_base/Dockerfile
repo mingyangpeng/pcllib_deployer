@@ -26,6 +26,7 @@ RUN apt update && apt install -y \
     python3-venv \
     python3-pip \
     ccache \
+    clang-format \
 && apt clean \
 && rm -rf /var/lib/apt/lists/*
 
@@ -45,6 +46,8 @@ ARG USERNAME=root
 RUN echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
  
 #USER $USERNAME
+RUN echo "export PATH=/usr/lib/ccache:$PATH" >> ~/.bashrc
+RUN echo "export CCACHE_MAXSIZE=10G" >> ~/.bashrc 
 RUN echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
 RUN echo "source /root/bolight/bin/activate" >> ~/.bashrc
 RUN echo "export ROS_LOCALHOST_ONLY=1" >> ~/.bashrc 
