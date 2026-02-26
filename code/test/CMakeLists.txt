@@ -36,7 +36,7 @@ if (TEST_ICP)
     target_link_libraries(test_icp pcllibs)
 endif (TEST_ICP)  
 
-set(TEST_BOX OFF  CACHE BOOL "Build test box")
+set(TEST_BOX ON  CACHE BOOL "Build test box")
 if (TEST_BOX)
     add_executable(test_box test_box.cpp) 
     target_link_libraries(test_box pcllibs)

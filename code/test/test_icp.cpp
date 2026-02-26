@@ -47,9 +47,23 @@ int main() {
                                                Eigen::Matrix4f::Identity(),
                                                "pca cloud1 -- cloud");
 
+        OBBDate obb1;
+        util::calcOBB<pcl::PointXYZ>(cloud1, obb1);
+        float length = 1.6;
+        for (int i = 0; i < 4; i++) {
+            obb1.vertices[i].z() = obb1.vertices[i + 4].z() - length;
+        }
+        pcl::PointCloud<pcl::PointXYZ>::Ptr ideal_stands(
+            new pcl::PointCloud<pcl::PointXYZ>);
+        filter::cropPointCloudBy8Vertices<pcl::PointXYZ>(cloud1, obb1.vertices,
+            ideal_stands, 1e-6f);
+        viewer::showOBB<pcl::PointXYZ>(cloud1, obb1, "obb");
+
+
+
         OBBDate obb;
         util::calcOBB<pcl::PointXYZ>(cloud, obb);
-        float length = 1.3;
+    
         for (int i = 0; i < 4; i++) {
             obb.vertices[i].z() = obb.vertices[i + 4].z() - length;
         }
@@ -57,15 +71,18 @@ int main() {
         pcl::PointCloud<pcl::PointXYZ>::Ptr stands(
             new pcl::PointCloud<pcl::PointXYZ>);
         filter::cropPointCloudBy8Vertices<pcl::PointXYZ>(cloud, obb.vertices,
-                                                         stands, false);
+                                                         stands, 1e-6f);
+        pcl::PointCloud<pcl::PointXYZ>::Ptr pca_stands(new pcl::PointCloud<pcl::PointXYZ>);
+        pcl::transformPointCloud<pcl::PointXYZ>(*stands,*pca_stands, transform);    
+        pcl_ptr->showPointCloud<pcl::PointXYZ>(pca_stands, ideal_stands  ,"pca");                                             
 
         // icp p2p
-        // Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
-        // bool isok = pcl_ptr->ICPPointToPoint<pcl::PointXYZ>(
-        //     cloud, cloud1, transform, 3000, 0.5, 1e-8, 1e-6);
-        // pcl_ptr->showPointCloud<pcl::PointXYZ>(cloud, cloud1, transform,
-        //                                        Eigen::Matrix4f::Identity(),
-        //                                        "cloud1 -- cloud");
-        // std::cout << "isok: " << isok << std::endl;
+        Eigen::Matrix4f icp_t = Eigen::Matrix4f::Identity();
+        isok = pcl_ptr->ICPPointToPoint<pcl::PointXYZ>(
+            pca_stands, ideal_stands, icp_t, 3000, 0.5, 1e-8, 1e-6);
+        pcl_ptr->showPointCloud<pcl::PointXYZ>(pca_stands, ideal_stands, icp_t,
+                                               Eigen::Matrix4f::Identity(),
+                                               "cloud1 -- cloud");
+        std::cout << "isok: " << isok << std::endl;
     }
 }
