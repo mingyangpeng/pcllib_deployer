@@ -49,6 +49,7 @@ int main() {
 
         OBBDate obb1;
         util::calcOBB<pcl::PointXYZ>(cloud1, obb1);
+        viewer::showOBB<pcl::PointXYZ>(cloud1, obb1, "obb1");
         float length = 1.6;
         for (int i = 0; i < 4; i++) {
             obb1.vertices[i].z() = obb1.vertices[i + 4].z() - length;
@@ -57,7 +58,7 @@ int main() {
             new pcl::PointCloud<pcl::PointXYZ>);
         filter::cropPointCloudBy8Vertices<pcl::PointXYZ>(cloud1, obb1.vertices,
             ideal_stands, 1e-6f);
-        viewer::showOBB<pcl::PointXYZ>(cloud1, obb1, "obb");
+        viewer::showOBB<pcl::PointXYZ>(cloud1, obb1, "obb2");
 
 
 

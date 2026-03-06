@@ -344,8 +344,6 @@ void cropPointCloudBy8Vertices(
     const std::vector<Eigen::Vector3f>& box_8_vertices,
     typename pcl::PointCloud<PointT>::Ptr& cloud_out, float epsilon = 1e-6f) {
     // ===================== 步骤2：将8个顶点转为点云，拟合OBB核心参数
-    // =====================
-
     typename pcl::PointCloud<PointT>::Ptr box_cloud(
         new pcl::PointCloud<PointT>);
     box_cloud->resize(8);
